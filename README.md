@@ -1,0 +1,1 @@
+Myng(命) is a AI divination app.
