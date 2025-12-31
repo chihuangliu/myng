@@ -3,6 +3,21 @@ from typing import Any, Dict
 from prokerala_api import ApiClient
 
 class ProkeralaClient:
+    planet_id_map =   {
+        "SUN": 0,
+        "MOON": 1,
+        "MERCURY": 2,
+        "VENUS": 3,
+        "MARS": 4,
+        "JUPITER": 5,
+        "SATURN": 6,
+        "URANUS": 7,
+        "NEPTUNE": 8,
+        "PLUTO": 9,
+        "ASCENDANT": 100,
+        "RAHU": 101,
+        "KETU": 102
+    }
     def __init__(self):
         client_id = os.getenv("PROKERALA_CLIENT_ID") or os.getenv("PROLERALA_ID")
         client_secret = os.getenv("PROKERALA_CLIENT_SECRET") or os.getenv("PROLERALA_SECRET")
