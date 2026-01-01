@@ -1,6 +1,7 @@
 import os
 from typing import Any, Dict
 from prokerala_api import ApiClient
+import pprint
 
 class ProkeralaClient:
     planet_id_map =   {
@@ -113,9 +114,9 @@ def get_client() -> ProkeralaClient:
 
 if __name__ == "__main__":
     client = get_client()
-    print(client.get_natal_planet_position(
-        "2025-01-01T01:02:59+00:00",
-        "10,10",
+    pprint.pprint(client.get_natal_planet_position(
+        "2025-01-01T00:00:00+00:00",
+        "25.0375198,121.5636796",
         ayanamsa=0,
         house_system="placidus",
         orb="default",

@@ -1,5 +1,8 @@
-from geopy.geocoders import ｀
+from geopy.geocoders import Nominatim
 from typing import Optional
+
+class GeopyError(Exception):
+    pass
 
 def get_coordinates(city: str) -> Optional[str]:
     """
@@ -16,4 +19,8 @@ def get_coordinates(city: str) -> Optional[str]:
     
     if location:
         return f"{location.latitude},{location.longitude}"
-        return None
+    else:
+        raise GeopyError("Location not found for city: " + city)
+
+if __name__ == "__main__":
+    print(get_coordinates("Taipei"))
