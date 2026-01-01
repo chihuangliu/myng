@@ -104,13 +104,7 @@ class ProkeralaClient:
 
 
 _client = ProkeralaClient()
-
-def get_client() -> ProkeralaClient:
-    """
-    Returns an instance of the ProkeralaClient.
-    """
-    return ProkeralaClient()
-
+get_client = lambda: _client
 
 if __name__ == "__main__":
     client = get_client()
