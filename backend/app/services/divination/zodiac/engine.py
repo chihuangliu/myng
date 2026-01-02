@@ -1,8 +1,9 @@
 from pprint import pprint
 from dataclasses import dataclass
 from datetime import date
-from backend.app.services.ai.chat import get_client as chat_client
+from backend.app.services.ai.chat import get_chat_response
 from backend.app.core.prokerala import get_client as prokerala_client
+from .prompts import portrait_prompt
 from typing import Any
 
 
@@ -19,10 +20,22 @@ class ZodiacEngine:
         "Trine",
         "Sextile",
     }
+    planets = {
+        "Sun",
+        "Moon",
+        "Mercury",
+        "Venus",
+        "Mars",
+        "Jupiter",
+        "Saturn",
+        "Uranus",
+        "Neptune",
+        "Pluto",
+    }
 
     def __init__(self):
-        self.chat_client = chat_client()
         self.prokerala_client = prokerala_client()
+        self.protrait_prompt = portrait_prompt
 
     def get_sign(self, query_date: date) -> Sign:
         month = query_date.month
@@ -96,30 +109,15 @@ class ZodiacEngine:
 
         profile = {}
 
-        # Process planets
-        target_planets = [
-            "Sun",
-            "Moon",
-            "Mercury",
-            "Venus",
-            "Mars",
-            "Jupiter",
-            "Saturn",
-            "Uranus",
-            "Neptune",
-            "Pluto",
-        ]
         for p in planet_positions:
             name = p.get("name")
-            if name in target_planets:
+            if name in self.planets:
                 profile[name] = {
                     "sign": p.get("zodiac", {}).get("name"),
                     "house": p.get("house_number"),
                     "degree": round(p.get("degree", 0), 1),
                 }
 
-        # Process angles (Ascendant, Mid Heaven)
-        # Note: API returns "Mid Heaven" but user requested "MidHeaven" key in profile
         target_angles = {"Ascendant": "Ascendant", "Mid Heaven": "MidHeaven"}
         for a in angles:
             name = a.get("name")
@@ -130,7 +128,6 @@ class ZodiacEngine:
                     "degree": round(a.get("degree", 0), 1),
                 }
 
-        # Process aspects
         key_aspects = []
         for asp in aspects:
             aspect_type = asp.get("aspect", {}).get("name")
@@ -145,7 +142,6 @@ class ZodiacEngine:
                     {"p1": p1, "p2": p2, "type": aspect_type, "orb": round(orb, 2)}
                 )
 
-        # Process house cusps
         house_cusps = {}
         for h in houses:
             number = h.get("number")
@@ -159,10 +155,22 @@ class ZodiacEngine:
             "house_cusps": house_cusps,
         }
 
+    def get_ai_protrait(self, datetime: str, coordinates: str) -> str:
+        portrait = self.get_portrait(datetime, coordinates)
+        prompt = self.protrait_prompt.format(DATA=portrait)
+        return get_chat_response(
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ]
+        )
+
 
 if __name__ == "__main__":
     engine = ZodiacEngine()
-    portrait = engine.get_portrait(
+    response = engine.get_ai_protrait(
         "2025-01-01T00:00:00+00:00", "25.0375198,121.5636796"
     )
-    pprint(portrait)
+    pprint(response)
