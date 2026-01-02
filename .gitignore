@@ -1,3 +1,5 @@
 backend/.env
 token.json
 *.pyc
+mobile/.expo
+mobile/.vscode
