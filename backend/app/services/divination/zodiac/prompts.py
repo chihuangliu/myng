@@ -12,10 +12,22 @@ Output Format:
 You must return ONLY a valid JSON object. Do not include any conversational text, preamble, or markdown formatting (do not use ```json). The JSON must use the following keys:
 
 {{
-  "core_identity": "String containing the analysis of the Sun/Moon/Ascendant synthesis.",
-  "psychological_dynamics": "String containing the analysis of the tightest aspects and internal conflicts.",
-  "drive_career_values": "String containing the analysis of Mars/Venus and House placements.",
-  "growth_pathway": "String containing the constructive summary of their biggest challenge and greatest strength."
+  "core_identity": {{
+    "content":"String containing the analysis of the Sun/Moon/Ascendant synthesis."
+    "summary": "String of 1 sentence summarizing the core_identity content."
+    }},
+  "psychological_dynamics": {{
+    "content": "String containing the analysis of the tightest aspects and internal conflicts.",
+    "summary": "String of 1 sentence summarizing the psychological_dynamics content."
+    }},
+  "drive_career_values": {{
+    "content": "String containing the analysis of Mars/Venus and House placements.",
+    "summary": "String of 1 sentence summarizing the drive_career_values content."
+    }},
+  "growth_pathway": {{
+    "content": "String containing the constructive summary of their biggest challenge and greatest strength.",
+    "summary": "String of 1 sentence summarizing the growth_pathway content."
+    }}
 }}
 
 Tone Guidelines:

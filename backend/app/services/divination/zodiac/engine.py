@@ -14,11 +14,16 @@ class Sign:
     name: str
 
 
+class PortraitSection(BaseModel):
+    content: str
+    summary: str
+
+
 class Portrait(BaseModel):
-    core_identity: str
-    psychological_dynamics: str
-    drive_career_values: str
-    growth_pathway: str
+    core_identity: PortraitSection
+    psychological_dynamics: PortraitSection
+    drive_career_values: PortraitSection
+    growth_pathway: PortraitSection
 
 
 class ZodiacPortraitError(Exception):

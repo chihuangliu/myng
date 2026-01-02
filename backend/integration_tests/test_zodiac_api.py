@@ -16,6 +16,14 @@ def test_get_ai_portrait():
 
     data = response.json()
     assert "core_identity" in data
+    assert "content" in data["core_identity"]
+    assert "summary" in data["core_identity"]
     assert "psychological_dynamics" in data
+    assert "content" in data["psychological_dynamics"]
+    assert "summary" in data["psychological_dynamics"]
     assert "drive_career_values" in data
+    assert "content" in data["drive_career_values"]
+    assert "summary" in data["drive_career_values"]
     assert "growth_pathway" in data
+    assert "content" in data["growth_pathway"]
+    assert "summary" in data["growth_pathway"]
