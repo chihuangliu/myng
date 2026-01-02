@@ -38,7 +38,13 @@ export default function LandingScreen() {
         // In a real app, you'd save these values to context/store
         console.log('City:', city);
         console.log('BirthDate:', birthDate);
-        router.replace('/(tabs)');
+        router.push({
+            pathname: '/portrait',
+            params: {
+                city: city,
+                datetime: birthDate.toISOString()
+            }
+        });
     };
 
     return (

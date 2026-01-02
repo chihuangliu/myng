@@ -3,4 +3,5 @@ from pydantic import BaseModel
 
 class ZodiacPortraitRequest(BaseModel):
     datetime: str
-    coordinates: str
+    city: str | None = None
+    coordinates: str | None = None
