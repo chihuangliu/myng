@@ -155,7 +155,7 @@ class ZodiacEngine:
             "house_cusps": house_cusps,
         }
 
-    def get_ai_protrait(self, datetime: str, coordinates: str) -> str:
+    def get_ai_portrait(self, datetime: str, coordinates: str) -> str:
         portrait = self.get_portrait(datetime, coordinates)
         prompt = self.protrait_prompt.format(DATA=portrait)
         return get_chat_response(
@@ -170,7 +170,7 @@ class ZodiacEngine:
 
 if __name__ == "__main__":
     engine = ZodiacEngine()
-    response = engine.get_ai_protrait(
+    response = engine.get_ai_portrait(
         "2025-01-01T00:00:00+00:00", "25.0375198,121.5636796"
     )
     pprint(response)
