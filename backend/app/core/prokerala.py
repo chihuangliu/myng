@@ -20,8 +20,8 @@ class ProkeralaClient:
         "KETU": 102
     }
     def __init__(self):
-        client_id = os.getenv("PROKERALA_CLIENT_ID") or os.getenv("PROLERALA_ID")
-        client_secret = os.getenv("PROKERALA_CLIENT_SECRET") or os.getenv("PROLERALA_SECRET")
+        client_id = os.getenv("PROKERALA_CLIENT_ID") 
+        client_secret = os.getenv("PROKERALA_SECRET") 
         
         if not client_id or not client_secret:
             raise ValueError("PROKERALA_CLIENT_ID and PROKERALA_CLIENT_SECRET must be set in environment variables.")
