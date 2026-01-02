@@ -3,3 +3,4 @@ token.json
 *.pyc
 mobile/.expo
 mobile/.vscode
+mobile/expo-env.d.ts

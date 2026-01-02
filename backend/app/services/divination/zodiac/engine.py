@@ -1,10 +1,12 @@
+import json
+from pydantic import BaseModel, ValidationError
+from typing import Any
 from pprint import pprint
 from dataclasses import dataclass
 from datetime import date
 from backend.app.services.ai.chat import get_chat_response
 from backend.app.core.prokerala import get_client as prokerala_client
 from .prompts import portrait_prompt
-from typing import Any
 
 
 @dataclass
@@ -12,7 +14,19 @@ class Sign:
     name: str
 
 
+class Portrait(BaseModel):
+    core_identity: str
+    psychological_dynamics: str
+    drive_career_values: str
+    growth_pathway: str
+
+
+class ZodiacPortraitError(Exception):
+    pass
+
+
 class ZodiacEngine:
+    ai_retries = 3
     key_aspects = {
         "Conjunction",
         "Opposition",
@@ -35,7 +49,7 @@ class ZodiacEngine:
 
     def __init__(self):
         self.prokerala_client = prokerala_client()
-        self.protrait_prompt = portrait_prompt
+        self.portrait_prompt = portrait_prompt
 
     def get_sign(self, query_date: date) -> Sign:
         month = query_date.month
@@ -155,16 +169,21 @@ class ZodiacEngine:
             "house_cusps": house_cusps,
         }
 
-    def get_ai_portrait(self, datetime: str, coordinates: str) -> str:
+    def get_ai_portrait(self, datetime: str, coordinates: str) -> Portrait:
         portrait = self.get_portrait(datetime, coordinates)
-        prompt = self.protrait_prompt.format(DATA=portrait)
-        return get_chat_response(
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ]
+        prompt = self.portrait_prompt.format(DATA=portrait)
+
+        for _ in range(self.ai_retries):
+            try:
+                response = get_chat_response(
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                return Portrait(**json.loads(response))
+            except (json.JSONDecodeError, ValidationError):
+                continue
+
+        raise ZodiacPortraitError(
+            f"Failed to generate a valid AI portrait after {self.ai_retries} retries."
         )
 
 
