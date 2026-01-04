@@ -1,3 +1,4 @@
+from functools import cache
 import json
 from pydantic import BaseModel, ValidationError
 from typing import Any
@@ -174,6 +175,7 @@ class ZodiacEngine:
             "house_cusps": house_cusps,
         }
 
+    @cache
     def get_ai_portrait(self, datetime: str, coordinates: str) -> Portrait:
         portrait = self.get_portrait(datetime, coordinates)
         prompt = self.portrait_prompt.format(DATA=portrait)
