@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import date
 from backend.app.services.ai.chat import get_chat_response
 from backend.app.core.prokerala import get_client as prokerala_client
-from .prompts import portrait_prompt
+from .prompts import portrait_prompt, daily_transit_prompt
 
 
 @dataclass
@@ -27,7 +27,20 @@ class Portrait(BaseModel):
     growth_pathway: PortraitSection
 
 
+class DailyTransit(BaseModel):
+    headline: str
+    mood_meter: str
+    daily_theme: str
+    challenge_analysis: str
+    opportunity_spotlight: str
+    actionable_advice: str
+
+
 class ZodiacPortraitError(Exception):
+    pass
+
+
+class ZodiacDailyTransitError(Exception):
     pass
 
 
@@ -52,10 +65,29 @@ class ZodiacEngine:
         "Neptune",
         "Pluto",
     }
+    orb_rules = {
+        "Moon": 1.5,
+        "Sun": 2.5,
+        "Mercury": 2.5,
+        "Venus": 2.5,
+        "Mars": 2.5,
+        "Jupiter": 1.0,
+        "Saturn": 1.0,
+        "Uranus": 1.0,
+        "Neptune": 1.0,
+        "Pluto": 1.0,
+        "Chiron": 1.0,
+        "True North Node": 1.0,
+        "True South Node": 1.0,
+        "Lilith": 1.5,
+        "Ascendant": 2.5,
+        "Midheaven": 2.5,
+    }
 
     def __init__(self):
         self.prokerala_client = prokerala_client()
         self.portrait_prompt = portrait_prompt
+        self.daily_transit_prompt = daily_transit_prompt
 
     def get_sign(self, query_date: date) -> Sign:
         month = query_date.month
@@ -193,10 +225,101 @@ class ZodiacEngine:
             f"Failed to generate a valid AI portrait after {self.ai_retries} retries."
         )
 
+    def _clean_transit_data(self, api_response, top_k: int = 3):
+        raw_aspects = api_response.get("data", {}).get("transit_natal_aspects", [])
+        hard_aspects = []
+        soft_aspects = []
+
+        for item in raw_aspects:
+            if not item or "planet_one" not in item or "aspect" not in item:
+                continue
+
+            transit_planet = item["planet_one"]["name"]
+            natal_planet = item["planet_two"]["name"]
+            aspect_name = item["aspect"]["name"]
+
+            if aspect_name not in self.key_aspects:
+                continue
+
+            orb = float(item["orb"])
+            orb_limit = self.orb_rules.get(transit_planet, 2.5)
+
+            if orb <= orb_limit:
+                aspect_type = (
+                    "Hard" if aspect_name in ["Square", "Opposition"] else "Soft"
+                )
+                entry = {
+                    "event": f"Transit {transit_planet} {aspect_name} Natal {natal_planet}",
+                    "orb": round(orb, 2),
+                    "type": aspect_type,
+                }
+                if aspect_type == "Hard":
+                    hard_aspects.append(entry)
+                else:
+                    soft_aspects.append(entry)
+
+        hard_aspects.sort(key=lambda x: x["orb"])
+        soft_aspects.sort(key=lambda x: x["orb"])
+
+        return hard_aspects[:top_k] + soft_aspects[:top_k]
+
+    def get_transit_natal_aspects(
+        self,
+        birth_datetime: str,
+        birth_coordinates: str,
+        transit_datetime: str,
+        current_coordinates: str,
+    ) -> dict[str, Any]:
+        response = self.prokerala_client.get_transit_planet_position(
+            birth_datetime, birth_coordinates, transit_datetime, current_coordinates
+        )
+
+        return self._clean_transit_data(response)
+
+    @cache
+    def get_ai_daily_transit(
+        self,
+        birth_datetime: str,
+        birth_coordinates: str,
+        transit_datetime: str,
+        current_coordinates: str,
+        ai_portrait: Portrait | None = None,
+    ) -> DailyTransit:
+        transit_data = self.get_transit_natal_aspects(
+            birth_datetime, birth_coordinates, transit_datetime, current_coordinates
+        )
+        portrait = ai_portrait or self.get_ai_portrait(
+            birth_datetime, birth_coordinates
+        )
+        prompt = self.daily_transit_prompt.format(
+            USER_PORTRAIT=portrait, TRANSIT_DATA=transit_data
+        )
+
+        for _ in range(self.ai_retries):
+            try:
+                response = get_chat_response(
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                return json.loads(response)
+            except (json.JSONDecodeError, ValidationError):
+                continue
+
+        raise ZodiacDailyTransitError(
+            f"Failed to generate a valid AI daily transit after {self.ai_retries} retries."
+        )
+
 
 if __name__ == "__main__":
     engine = ZodiacEngine()
-    response = engine.get_ai_portrait(
-        "2025-01-01T00:00:00+00:00", "25.0375198,121.5636796"
+    # response = engine.get_ai_portrait(
+    #     "2025-01-01T00:00:00+00:00", "25.0375198,121.5636796"
+    # )
+    # pprint(response)
+
+    response = engine.get_ai_daily_transit(
+        "2000-01-01T00:00:00+00:00",
+        "25.0375198,121.5636796",
+        "2025-05-05T00:00:00+00:00",
+        "25.0375198,121.5636796",
     )
     pprint(response)
