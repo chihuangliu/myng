@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StyleSheet, View, Platform, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Text, Pressable } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
@@ -22,6 +23,27 @@ export default function LandingScreen() {
     // but for this mockup we can default to showing the date if the user interacts.
     // To match the image "Select Date" / "Select Time" vs values:
     const [dateSelected, setDateSelected] = useState(false);
+
+    useEffect(() => {
+        const loadUserData = async () => {
+            try {
+                const savedCity = await AsyncStorage.getItem('user_city');
+                const savedDate = await AsyncStorage.getItem('user_birth_date');
+
+                if (savedCity) {
+                    setCityQuery(savedCity);
+                    setSelectedCity(savedCity);
+                }
+                if (savedDate) {
+                    setBirthDate(new Date(savedDate));
+                    setDateSelected(true);
+                }
+            } catch (e) {
+                console.error('Failed to load user data', e);
+            }
+        };
+        loadUserData();
+    }, []);
 
     // Filter cities based on query
     const filteredCities = CITIES.filter(c =>
@@ -52,7 +74,15 @@ export default function LandingScreen() {
         }
     };
 
-    const handleContinue = () => {
+    const handleContinue = async () => {
+        try {
+            if (selectedCity) {
+                await AsyncStorage.setItem('user_city', selectedCity);
+            }
+            await AsyncStorage.setItem('user_birth_date', birthDate.toISOString());
+        } catch (e) {
+            console.error('Failed to save user data', e);
+        }
 
         router.push({
             pathname: '/portrait',
