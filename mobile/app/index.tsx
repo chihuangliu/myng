@@ -1,148 +1,178 @@
 import { useState } from 'react';
-import { StyleSheet, View, Platform, Button } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { StyleSheet, View, Platform, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Text, Pressable } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
+const CITIES = ['Taipei', 'London', 'New York'];
+
 export default function LandingScreen() {
     const router = useRouter();
-    const [city, setCity] = useState('Taipei');
-    const [birthDate, setBirthDate] = useState(new Date());
+    const [cityQuery, setCityQuery] = useState('');
+    const [selectedCity, setSelectedCity] = useState<string | null>(null);
+    const [showCityList, setShowCityList] = useState(false);
 
+    const [birthDate, setBirthDate] = useState(new Date());
     const [mode, setMode] = useState<'date' | 'time'>('date');
-    const [show, setShow] = useState(false);
+    const [showPicker, setShowPicker] = useState(false);
+
+    // Initial state matching the "placeholder" look until selected, 
+    // but for this mockup we can default to showing the date if the user interacts.
+    // To match the image "Select Date" / "Select Time" vs values:
+    const [dateSelected, setDateSelected] = useState(false);
+
+    // Filter cities based on query
+    const filteredCities = CITIES.filter(c =>
+        c.toLowerCase().includes(cityQuery.toLowerCase())
+    );
+
+    const handleCitySelect = (city: string) => {
+        setSelectedCity(city);
+        setCityQuery(city);
+        setShowCityList(false);
+    };
 
     const onChange = (event: any, selectedDate?: Date) => {
         const currentDate = selectedDate || birthDate;
-        setShow(Platform.OS === 'ios');
         setBirthDate(currentDate);
+        setDateSelected(true);
+        if (Platform.OS === 'android') {
+            setShowPicker(false);
+        }
     };
 
-    const showMode = (currentMode: 'date' | 'time') => {
-        setShow(true);
-        setMode(currentMode);
-    };
-
-    const showDatepicker = () => {
-        showMode('date');
-    };
-
-    const showTimepicker = () => {
-        showMode('time');
+    const togglePicker = (currentMode: 'date' | 'time') => {
+        if (showPicker && mode === currentMode) {
+            setShowPicker(false);
+        } else {
+            setMode(currentMode);
+            setShowPicker(true);
+        }
     };
 
     const handleContinue = () => {
-        // In a real app, you'd save these values to context/store
-        console.log('City:', city);
-        console.log('BirthDate:', birthDate);
+
         router.push({
             pathname: '/portrait',
             params: {
-                city: city,
+                city: selectedCity,
                 datetime: birthDate.toISOString()
             }
         });
     };
 
+    const formatDate = (date: Date) => {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const formatTime = (date: Date) => {
+        return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    };
+
     return (
         <ThemedView style={styles.container}>
-            <ThemedText type="title" style={styles.title}>Welcome to Myng</ThemedText>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.keyboardView}
+            >
+                <ScrollView contentContainerStyle={styles.scrollContent}>
 
-            <View style={styles.section}>
-                <ThemedText type="subtitle">City of Birth</ThemedText>
-                <View style={styles.pickerContainer}>
-                    <Picker
-                        selectedValue={city}
-                        onValueChange={(itemValue) => setCity(itemValue)}
-                        style={styles.picker}
-                    >
-                        <Picker.Item label="Taipei" value="Taipei" />
-                        <Picker.Item label="London" value="London" />
-                        <Picker.Item label="New York" value="New York" />
-                    </Picker>
-                </View>
-            </View>
+                    <Text style={styles.title}>Welcome to Myng</Text>
 
-            <View style={styles.section}>
-                <ThemedText type="subtitle">Birthday</ThemedText>
-
-                <View style={styles.buttonGroup}>
-                    {Platform.OS === 'web' ? (
-                        <View style={styles.webPickerGroup}>
-                            {/* Native Date Input */}
-                            <input
-                                type="date"
-                                value={birthDate.toISOString().split('T')[0]}
-                                onChange={(e) => {
-                                    const newDate = new Date(birthDate);
-                                    // Parse YYYY-MM-DD
-                                    const [y, m, d] = e.target.value.split('-').map(Number);
-                                    newDate.setFullYear(y, m - 1, d);
-                                    setBirthDate(newDate);
+                    {/* City Section */}
+                    <View style={styles.section}>
+                        <Text style={styles.label}>Where were you born?</Text>
+                        <View style={styles.inputContainer}>
+                            <TextInput
+                                style={styles.textInput}
+                                placeholder="Enter city to search..."
+                                placeholderTextColor="#999"
+                                value={cityQuery}
+                                onChangeText={(text) => {
+                                    setCityQuery(text);
+                                    setShowCityList(true);
+                                    setSelectedCity(null); // Reset selection on edit
                                 }}
-                                style={{
-                                    height: 40,
-                                    padding: 10,
-                                    borderRadius: 5,
-                                    border: '1px solid #ccc',
-                                    backgroundColor: '#fff',
-                                    color: '#000',
-                                    marginRight: 10
-                                }}
+                                onFocus={() => setShowCityList(true)}
                             />
+                        </View>
+                        {showCityList && cityQuery.length > 0 && filteredCities.length > 0 && (
+                            <View style={styles.dropdownList}>
+                                {filteredCities.map((item) => (
+                                    <TouchableOpacity
+                                        key={item}
+                                        style={styles.dropdownItem}
+                                        onPress={() => handleCitySelect(item)}
+                                    >
+                                        <Text style={styles.dropdownText}>{item}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
+                    </View>
 
-                            {/* Native Time Input */}
-                            <input
-                                type="time"
-                                value={birthDate.toTimeString().slice(0, 5)}
-                                onChange={(e) => {
-                                    const [hours, minutes] = e.target.value.split(':').map(Number);
-                                    const newDate = new Date(birthDate);
-                                    newDate.setHours(hours);
-                                    newDate.setMinutes(minutes);
-                                    setBirthDate(newDate);
-                                }}
-                                style={{
-                                    height: 40,
-                                    padding: 10,
-                                    borderRadius: 5,
-                                    border: '1px solid #ccc',
-                                    backgroundColor: '#fff',
-                                    color: '#000'
-                                }}
-                            />
-                        </View>) : (
-                        <>
-                            <Button onPress={showDatepicker} title="Select Date" />
-                            <Button onPress={showTimepicker} title="Select Time" />
-                        </>
+                    {/* Date/Time Section */}
+                    <View style={styles.section}>
+                        <Text style={styles.label}>When were you born?</Text>
+                        <View style={styles.dateTimeRow}>
+                            {/* Date Picker Trigger */}
+                            <TouchableOpacity
+                                style={[styles.dateTimeInput, mode === 'date' && showPicker && styles.activeInput]}
+                                onPress={() => togglePicker('date')}
+                            >
+                                <Text style={styles.placeholderLabel}>Select Date</Text>
+                                <Text style={styles.valueText}>{formatDate(birthDate)}</Text>
+                            </TouchableOpacity>
+
+                            {/* Time Picker Trigger */}
+                            <TouchableOpacity
+                                style={[styles.dateTimeInput, mode === 'time' && showPicker && styles.activeInput]}
+                                onPress={() => togglePicker('time')}
+                            >
+                                <Text style={styles.placeholderLabel}>Select Time</Text>
+                                <Text style={styles.valueText}>{formatTime(birthDate)}</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Inline Picker for iOS */}
+                        {showPicker && Platform.OS === 'ios' && (
+                            <View style={styles.pickerContainer}>
+                                <DateTimePicker
+                                    testID="dateTimePicker"
+                                    value={birthDate}
+                                    mode={mode}
+                                    is24Hour={false}
+                                    onChange={onChange}
+                                    display="spinner"
+                                    themeVariant="light"
+                                    style={styles.iosPicker}
+                                />
+                            </View>
+                        )}
+                    </View>
+
+                    {/* Continue Button */}
+                    <View style={styles.footer}>
+                        <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
+                            <Text style={styles.continueButtonText}>Continue</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Android Modal Picker (Invisible trigger) */}
+                    {showPicker && Platform.OS === 'android' && (
+                        <DateTimePicker
+                            testID="dateTimePicker"
+                            value={birthDate}
+                            mode={mode}
+                            is24Hour={false}
+                            onChange={onChange}
+                        />
                     )}
-                </View>
 
-                {Platform.OS !== 'web' && (
-                    <ThemedText style={styles.selectedDate}>
-                        {birthDate.toLocaleString()}
-                    </ThemedText>
-                )}
-
-                {show && Platform.OS !== 'web' && (
-                    <DateTimePicker
-                        testID="dateTimePicker"
-                        value={birthDate}
-                        mode={mode}
-                        is24Hour={true}
-                        onChange={onChange}
-                        display="default"
-                    />
-                )}
-            </View>
-
-            <View style={styles.footer}>
-                <Button title="Continue" onPress={handleContinue} />
-            </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
         </ThemedView>
     );
 }
@@ -150,68 +180,134 @@ export default function LandingScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 24,
+        backgroundColor: '#fff', // White background as per image
+    },
+    keyboardView: {
+        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
+        padding: 32,
         justifyContent: 'center',
     },
     title: {
+        fontSize: 32,
+        fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
         textAlign: 'center',
-        marginBottom: 40,
+        marginBottom: 48,
+        color: '#000',
     },
     section: {
-        marginBottom: 24,
+        marginBottom: 32,
+        position: 'relative', // For dropdown positioning
+        zIndex: 1,
     },
-    pickerContainer: {
+    label: {
+        fontSize: 18,
+        fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), // Using serif for questions too based on some interpretations, or standard sans. Image looks standard serif-ish? Actually looks like Georgia for "Where were you born?"
+        marginBottom: 12,
+        color: '#000',
+    },
+    inputContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 8,
         borderWidth: 1,
         borderColor: '#ccc',
-        borderRadius: 8,
-        marginTop: 8,
-        // Picker height handling for iOS/Android
-        ...Platform.select({
-            ios: {
-                height: 100,
-                overflow: 'hidden',
-            },
-            android: {
-                height: 50,
-            }
-        })
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
-    picker: {
-        width: '100%',
-        height: '100%',
+    textInput: {
+        height: 50,
+        paddingHorizontal: 16,
+        fontSize: 16,
+        color: '#000',
     },
-    buttonGroup: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginTop: 12,
-        marginBottom: 12,
+    dropdownList: {
+        position: 'absolute',
+        top: 85, // Adjust based on label + input height
+        left: 0,
+        right: 0,
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#eee',
+        borderTopWidth: 0,
+        borderBottomLeftRadius: 8,
+        borderBottomRightRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 4,
+        zIndex: 100,
     },
-    selectedDate: {
-        textAlign: 'center',
-        marginTop: 8,
+    dropdownItem: {
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    dropdownText: {
         fontSize: 16,
     },
-    footer: {
-        marginTop: 40,
-    },
-    webPickerGroup: {
+    dateTimeRow: {
         flexDirection: 'row',
-        gap: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        flexWrap: 'wrap', // Allow wrapping on small screens
+        justifyContent: 'space-between',
+        gap: 16,
     },
-    webPicker: {
-        height: 40,
-        marginRight: 10,
-        padding: 5,
-        backgroundColor: '#fff', // Ensure contrast
-        color: '#000',
-        borderRadius: 5,
+    dateTimeInput: {
+        flex: 1,
+        backgroundColor: '#F5F5F5',
+        borderRadius: 8,
+        padding: 16,
+        height: 80, // Taller to accommodate label + value
+        justifyContent: 'center',
         borderWidth: 1,
-        borderColor: '#ccc',
-        minWidth: 150, // Force width
-        opacity: 1,
-        cursor: 'pointer',
+        borderColor: '#E0E0E0',
+    },
+    activeInput: {
+        borderColor: '#002D62',
+        borderWidth: 2,
+    },
+    placeholderLabel: {
+        fontSize: 14,
+        color: '#888',
+        marginBottom: 4,
+    },
+    valueText: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#000',
+    },
+    pickerContainer: {
+        marginTop: 16,
+        backgroundColor: '#F5F5F5',
+        borderRadius: 8,
+        overflow: 'hidden',
+    },
+    iosPicker: {
+        height: 200,
+        width: '100%',
+    },
+    footer: {
+        marginTop: 24,
+    },
+    continueButton: {
+        backgroundColor: '#002D62', // Navy blue
+        borderRadius: 30, // Pill shape
+        paddingVertical: 18,
+        alignItems: 'center',
+        shadowColor: '#002D62',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+    continueButtonText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: '600',
+        fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     },
 });

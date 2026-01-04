@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity, LayoutAnimation, Platform, UIManager } from 'react-native';
+import { StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity, LayoutAnimation, Platform, UIManager, Text } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -33,7 +33,7 @@ const Section = ({ title, data }: { title: string; data: PortraitSection }) => {
     return (
         <ThemedView style={styles.sectionContainer}>
             <TouchableOpacity onPress={toggleExpand} style={styles.header}>
-                <ThemedText type="subtitle" style={styles.sectionTitle}>{title}</ThemedText>
+                <Text style={styles.sectionTitle}>{title}</Text>
                 <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={24} color="#888" />
             </TouchableOpacity>
 
@@ -93,7 +93,7 @@ export default function PortraitScreen() {
     if (loading) {
         return (
             <ThemedView style={styles.container}>
-                <ActivityIndicator size="large" color="#ffffff" />
+                <ActivityIndicator size="large" color="#000000" />
                 <ThemedText type="subtitle" style={styles.waitingText}>Consulting the stars...</ThemedText>
             </ThemedView>
         );
@@ -111,7 +111,7 @@ export default function PortraitScreen() {
     return (
         <ScrollView contentContainerStyle={styles.scrollContainer}>
             <ThemedView style={styles.container}>
-                <ThemedText type="title" style={styles.title}>Your Zodiac Portrait</ThemedText>
+                <Text style={styles.title}>Your Zodiac Portrait</Text>
 
                 {portrait && (
                     <>
@@ -130,25 +130,31 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 24,
+        backgroundColor: '#fff',
     },
     scrollContainer: {
         flexGrow: 1,
+        backgroundColor: '#fff',
     },
     title: {
         marginBottom: 32,
         textAlign: 'center',
+        fontSize: 32,
+        fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+        color: '#000',
     },
     waitingText: {
         marginTop: 20,
         textAlign: 'center',
+        color: '#000',
     },
     sectionContainer: {
         marginBottom: 20,
         padding: 16,
         borderRadius: 12,
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        backgroundColor: '#F9F9F9', // Light gray background for cards
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: '#EEE',
     },
     header: {
         flexDirection: 'row',
@@ -159,21 +165,26 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: '600',
+        fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+        color: '#000',
+        opacity: 0.6, // Requested opacity
     },
     summary: {
         fontSize: 14,
         fontStyle: 'italic',
         opacity: 0.8,
         lineHeight: 20,
+        color: '#333',
     },
     contentContainer: {
         marginTop: 16,
         paddingTop: 16,
         borderTopWidth: 1,
-        borderTopColor: 'rgba(255, 255, 255, 0.1)',
+        borderTopColor: 'rgba(0, 0, 0, 0.1)',
     },
     content: {
         lineHeight: 24,
         fontSize: 16,
+        color: '#000',
     }
 });
