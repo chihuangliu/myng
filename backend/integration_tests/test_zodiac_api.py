@@ -50,7 +50,7 @@ def test_get_ai_daily_transit():
     }
     payload = {
         "birth_datetime": "2000-01-01T00:00:00+00:00",
-        "birth_coordinates": "25.0375198,121.5636796",
+        "birth_city": "Taipie",
         "transit_datetime": "2025-01-01T00:00:00+00:00",
         "current_coordinates": "25.0375198,121.5636796",
         "ai_portrait": mock_portrait,

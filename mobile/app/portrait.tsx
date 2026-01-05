@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity, LayoutAnimation, Platform, UIManager, Text } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -53,6 +55,7 @@ export default function PortraitScreen() {
     const [loading, setLoading] = useState(true);
     const [portrait, setPortrait] = useState<Portrait | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
 
     useEffect(() => {
         const fetchPortrait = async () => {
@@ -75,6 +78,14 @@ export default function PortraitScreen() {
 
                 const data = await response.json();
                 setPortrait(data);
+
+                // Save to local storage for Daily Insights
+                await AsyncStorage.multiSet([
+                    ['user_city', city as string],
+                    ['user_birth_datetime', datetime as string],
+                    ['user_portrait', JSON.stringify(data)]
+                ]);
+
             } catch (err: any) {
                 setError(err.message || 'An error occurred while consulting the stars.');
             } finally {
@@ -109,20 +120,33 @@ export default function PortraitScreen() {
     }
 
     return (
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-            <ThemedView style={styles.container}>
-                <Text style={styles.title}>Your Zodiac Portrait</Text>
+        <ThemedView style={{ flex: 1 }}>
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+                <ThemedView style={styles.container}>
+                    <Text style={styles.title}>Your Zodiac Portrait</Text>
 
-                {portrait && (
-                    <>
-                        <Section title="Core Identity" data={portrait.core_identity} />
-                        <Section title="Psychological Dynamics" data={portrait.psychological_dynamics} />
-                        <Section title="Drive, Career & Values" data={portrait.drive_career_values} />
-                        <Section title="Growth & Pathway" data={portrait.growth_pathway} />
-                    </>
-                )}
+                    {portrait && (
+                        <>
+                            <Section title="Core Identity" data={portrait.core_identity} />
+                            <Section title="Psychological Dynamics" data={portrait.psychological_dynamics} />
+                            <Section title="Drive, Career & Values" data={portrait.drive_career_values} />
+                            <Section title="Growth & Pathway" data={portrait.growth_pathway} />
+                        </>
+                    )}
+                    <ThemedView style={{ height: 80 }} />
+                </ThemedView>
+            </ScrollView>
+
+            <ThemedView style={styles.bottomBar}>
+                <TouchableOpacity
+                    style={styles.bottomBarItem}
+                    onPress={() => router.push('/daily-insight')}
+                >
+                    <Ionicons name="sunny-outline" size={24} color="#000" />
+                    <Text style={styles.bottomBarText}>Daily Insight</Text>
+                </TouchableOpacity>
             </ThemedView>
-        </ScrollView>
+        </ThemedView>
     );
 }
 
@@ -186,5 +210,30 @@ const styles = StyleSheet.create({
         lineHeight: 24,
         fontSize: 16,
         color: '#000',
-    }
+    },
+    bottomBar: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderTopWidth: 1,
+        borderTopColor: '#EEE',
+        backgroundColor: '#fff',
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        paddingBottom: Platform.OS === 'ios' ? 34 : 12, // Safe area padding
+    },
+    bottomBarItem: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 4,
+    },
+    bottomBarText: {
+        fontSize: 12,
+        color: '#000',
+        fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    },
 });

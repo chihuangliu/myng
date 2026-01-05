@@ -1,3 +1,4 @@
+from app.core.location import get_coordinates
 from functools import cache
 import json
 from pydantic import BaseModel, ValidationError
@@ -281,11 +282,18 @@ class ZodiacEngine:
     def get_ai_daily_transit(
         self,
         birth_datetime: str,
-        birth_coordinates: str,
         transit_datetime: str,
         current_coordinates: str,
         ai_portrait: Portrait | None = None,
+        birth_city: str | None = None,
+        birth_coordinates: str | None = None,
     ) -> DailyTransit:
+        if not birth_coordinates:
+            if not birth_city:
+                raise ValueError(
+                    "birth_city is required if birth_coordinates is not provided"
+                )
+            birth_coordinates = get_coordinates(birth_city)
         transit_data = self.get_transit_natal_aspects(
             birth_datetime, birth_coordinates, transit_datetime, current_coordinates
         )
