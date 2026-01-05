@@ -3,6 +3,7 @@ import { StyleSheet, ActivityIndicator, ScrollView, Platform, Text, RefreshContr
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getDailyInsightCache, saveDailyInsightCache } from '@/utils/storage';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -36,6 +37,15 @@ export default function DailyInsightScreen() {
 
     const fetchDailyInsight = useCallback(async () => {
         try {
+            // Check cache first
+            const cachedData = await getDailyInsightCache();
+            if (cachedData) {
+                setInsight(cachedData);
+                setLoading(false);
+                setRefreshing(false);
+                return;
+            }
+
             // Retrieve stored user info
             const values = await AsyncStorage.multiGet(['user_city', 'user_birth_datetime', 'user_portrait']);
             const city = values[0][1];
@@ -80,6 +90,7 @@ export default function DailyInsightScreen() {
 
             const data = await response.json();
             setInsight(data);
+            await saveDailyInsightCache(data);
             setError(null);
 
         } catch (err: any) {
