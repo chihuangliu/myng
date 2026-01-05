@@ -27,3 +27,42 @@ def test_get_ai_portrait():
     assert "growth_pathway" in data
     assert "content" in data["growth_pathway"]
     assert "summary" in data["growth_pathway"]
+
+
+def test_get_ai_daily_transit():
+    mock_portrait = {
+        "core_identity": {
+            "content": "Core Identity",
+            "summary": "Core Identity Summary",
+        },
+        "psychological_dynamics": {
+            "content": "Psychological Dynamics",
+            "summary": "Psychological Dynamics Summary",
+        },
+        "drive_career_values": {
+            "content": "Drive Career Values",
+            "summary": "Drive Career Values Summary",
+        },
+        "growth_pathway": {
+            "content": "Growth Pathway",
+            "summary": "Growth Pathway Summary",
+        },
+    }
+    payload = {
+        "birth_datetime": "2000-01-01T00:00:00+00:00",
+        "birth_coordinates": "25.0375198,121.5636796",
+        "transit_datetime": "2025-01-01T00:00:00+00:00",
+        "current_coordinates": "25.0375198,121.5636796",
+        "ai_portrait": mock_portrait,
+    }
+
+    response = client.post("/api/v1/divination/zodiac/daily-transit", json=payload)
+
+    assert response.status_code == 200
+
+    data = response.json()
+    assert "headline" in data
+    assert "mood_word" in data
+    assert "the_vibe" in data
+    assert "the_fix" in data
+    assert "pro_tip" in data

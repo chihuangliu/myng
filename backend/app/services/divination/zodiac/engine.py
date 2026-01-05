@@ -16,11 +16,13 @@ class Sign:
 
 
 class PortraitSection(BaseModel):
+    model_config = {"frozen": True}
     content: str
     summary: str
 
 
 class Portrait(BaseModel):
+    model_config = {"frozen": True}
     core_identity: PortraitSection
     psychological_dynamics: PortraitSection
     drive_career_values: PortraitSection
@@ -29,11 +31,10 @@ class Portrait(BaseModel):
 
 class DailyTransit(BaseModel):
     headline: str
-    mood_meter: str
-    daily_theme: str
-    challenge_analysis: str
-    opportunity_spotlight: str
-    actionable_advice: str
+    mood_word: str
+    the_vibe: str
+    the_fix: str
+    pro_tip: str
 
 
 class ZodiacPortraitError(Exception):
@@ -294,13 +295,12 @@ class ZodiacEngine:
         prompt = self.daily_transit_prompt.format(
             USER_PORTRAIT=portrait, TRANSIT_DATA=transit_data
         )
-
         for _ in range(self.ai_retries):
             try:
                 response = get_chat_response(
                     messages=[{"role": "user", "content": prompt}]
                 )
-                return json.loads(response)
+                return DailyTransit(**json.loads(response))
             except (json.JSONDecodeError, ValidationError):
                 continue
 

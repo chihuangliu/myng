@@ -1,6 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from backend.app.services.divination.zodiac.engine import ZodiacEngine
-from backend.app.schemas.zodiac import ZodiacPortraitRequest, ZodiacPortraitResponse
+from backend.app.schemas.zodiac import (
+    ZodiacPortraitRequest,
+    ZodiacPortraitResponse,
+    ZodiacDailyTransitRequest,
+    ZodiacDailyTransitResponse,
+)
 
 from backend.app.core.location import get_coordinates
 
@@ -28,3 +33,16 @@ async def get_ai_portrait(request: ZodiacPortraitRequest) -> ZodiacPortraitRespo
         return engine.get_ai_portrait(request.datetime, coordinates)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/divination/zodiac/daily-transit")
+async def get_ai_daily_transit(
+    request: ZodiacDailyTransitRequest,
+) -> ZodiacDailyTransitResponse:
+    return engine.get_ai_daily_transit(
+        birth_datetime=request.birth_datetime,
+        birth_coordinates=request.birth_coordinates,
+        transit_datetime=request.transit_datetime,
+        current_coordinates=request.current_coordinates,
+        ai_portrait=request.ai_portrait,
+    )
