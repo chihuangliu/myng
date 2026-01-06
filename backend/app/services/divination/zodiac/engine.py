@@ -33,8 +33,8 @@ class Portrait(BaseModel):
 class DailyTransit(BaseModel):
     headline: str
     mood_word: str
-    the_vibe: str
-    the_fix: str
+    the_tension: str
+    the_shift: str
     pro_tip: str
 
 

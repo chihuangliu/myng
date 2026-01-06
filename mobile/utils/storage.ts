@@ -5,11 +5,10 @@ const DAILY_INSIGHT_KEY = 'user_daily_insight';
 export interface DailyTransit {
     headline: string;
     mood_word: string;
-    the_vibe: string;
-    the_fix: string;
+    the_tension: string;
+    the_shift: string;
     pro_tip: string;
 }
-
 interface CachedDailyInsight {
     date: string; // YYYY-MM-DD
     data: DailyTransit;

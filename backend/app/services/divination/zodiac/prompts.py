@@ -56,9 +56,9 @@ You must return ONLY a valid JSON object. Do not include any conversational text
 {{
   "headline": "3-5 words max. Punchy and relatable.",
   "mood_word": "1 word that sums up the energy (e.g., 'Spicy', 'Foggy', 'Electric').",
-  "the_vibe": "2 sentences max. Describe the internal conflict the user feels today without explaining the planets.",
-  "the_fix": "1 sentence. The opportunity or 'silver lining' hidden in the stress.",
-  "pro_tip": "1 short, direct action step. What should they DO?"
+  "the_tension": "2 sentences max. Describe the internal conflict the user feels today without explaining the planets.",
+  "the_shift": "1 sentence. The opportunity or 'silver lining' hidden in the stress.",
+  "pro_tip": "2 sentences max. Direct action steps. What should they DO?"
 }}
 
 **Tone:**

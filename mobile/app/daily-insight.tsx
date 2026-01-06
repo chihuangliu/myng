@@ -11,8 +11,8 @@ import { ThemedView } from '@/components/themed-view';
 interface DailyTransit {
     headline: string;
     mood_word: string;
-    the_vibe: string;
-    the_fix: string;
+    the_tension: string;
+    the_shift: string;
     pro_tip: string;
 }
 
@@ -145,29 +145,30 @@ export default function DailyInsightScreen() {
                 {insight && (
                     <ThemedView style={styles.cardsContainer}>
                         <InsightCard
-                            title="Current Mood"
-                            content={insight.mood_word}
-                            icon="happy-outline"
-                            color="#FF9F1C"
-                        />
-                        <InsightCard
-                            title="The Vibe"
-                            content={insight.the_vibe}
-                            icon="planet-outline"
-                            color="#2EC4B6"
-                        />
-                        <InsightCard
-                            title="The Fix"
-                            content={insight.the_fix}
-                            icon="construct-outline"
-                            color="#E71D36"
-                        />
-                        <InsightCard
                             title="Pro Tip"
                             content={insight.pro_tip}
                             icon="bulb-outline"
                             color="#FFBE0B"
                         />
+                        <InsightCard
+                            title="Current Mood"
+                            content={insight.mood_word}
+                            icon="chatbubble-ellipses-outline"
+                            color="#FF9F1C"
+                        />
+                        <InsightCard
+                            title="The Tension"
+                            content={insight.the_tension}
+                            icon="sad-outline"
+                            color="#2EC4B6"
+                        />
+                        <InsightCard
+                            title="The Shift"
+                            content={insight.the_shift}
+                            icon="heart-outline"
+                            color="#E71D36"
+                        />
+
                     </ThemedView>
                 )}
             </ThemedView>
