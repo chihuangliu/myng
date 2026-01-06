@@ -9,6 +9,10 @@ from datetime import date
 from backend.app.services.ai.chat import get_chat_response
 from backend.app.core.prokerala import get_client as prokerala_client
 from .prompts import portrait_prompt, daily_transit_prompt
+from backend.app.core.logger import setup_logging
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -221,6 +225,12 @@ class ZodiacEngine:
                 )
                 return Portrait(**json.loads(response))
             except (json.JSONDecodeError, ValidationError):
+                logger.error(
+                    {
+                        "title": "Failed to generate a valid AI portrait",
+                        "response": response,
+                    }
+                )
                 continue
 
         raise ZodiacPortraitError(
