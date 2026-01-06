@@ -1,4 +1,3 @@
-import _pytest.logging
 from app.core.location import get_coordinates
 from functools import cache
 import json
