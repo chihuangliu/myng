@@ -1,3 +1,4 @@
+import _pytest.logging
 from app.core.location import get_coordinates
 from functools import cache
 import json
@@ -9,7 +10,6 @@ from datetime import date
 from backend.app.services.ai.chat import get_chat_response
 from backend.app.core.prokerala import get_client as prokerala_client
 from .prompts import portrait_prompt, daily_transit_prompt
-from backend.app.core.logger import setup_logging
 import logging
 
 logger = logging.getLogger(__name__)
@@ -221,8 +221,10 @@ class ZodiacEngine:
         for _ in range(self.ai_retries):
             try:
                 response = get_chat_response(
-                    messages=[{"role": "user", "content": prompt}]
+                    messages=[{"role": "user", "content": prompt}],
+                    response_format={"type": "json_object"},
                 )
+                logger.info({"title": "AI portrait generated", "response": response})
                 return Portrait(**json.loads(response))
             except (json.JSONDecodeError, ValidationError):
                 logger.error(
@@ -288,7 +290,6 @@ class ZodiacEngine:
 
         return self._clean_transit_data(response)
 
-    @cache
     def get_ai_daily_transit(
         self,
         birth_datetime: str,
@@ -316,7 +317,11 @@ class ZodiacEngine:
         for _ in range(self.ai_retries):
             try:
                 response = get_chat_response(
-                    messages=[{"role": "user", "content": prompt}]
+                    messages=[{"role": "user", "content": prompt}],
+                    response_format={"type": "json_object"},
+                )
+                logger.info(
+                    {"title": "AI daily transit generated", "response": response}
                 )
                 return DailyTransit(**json.loads(response))
             except (json.JSONDecodeError, ValidationError):

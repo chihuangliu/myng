@@ -22,12 +22,15 @@ def get_chat_response(
     messages: list[ChatCompletionMessageParam],
     model_name: str = os.getenv("AI_MODEL_NAME"),
     client: OpenAI = _client,
+    **kwargs,
 ) -> str:
     """
     Sends a message to an OPENAI Compatible API via the OpenAI client and returns the response.
     """
 
-    response = client.chat.completions.create(model=model_name, messages=messages)
+    response = client.chat.completions.create(
+        model=model_name, messages=messages, **kwargs
+    )
     return response.choices[0].message.content
 
 
