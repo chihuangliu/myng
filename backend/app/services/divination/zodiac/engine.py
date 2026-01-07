@@ -35,9 +35,9 @@ class Portrait(BaseModel):
 
 class DailyTransit(BaseModel):
     headline: str
-    mood_word: str
+    energy: str
     the_tension: str
-    the_shift: str
+    the_remedy: str
     pro_tip: str
 
 

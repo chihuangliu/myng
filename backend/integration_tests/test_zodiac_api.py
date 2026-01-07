@@ -62,7 +62,7 @@ def test_get_ai_daily_transit():
 
     data = response.json()
     assert "headline" in data
-    assert "mood_word" in data
-    assert "the_vibe" in data
-    assert "the_fix" in data
+    assert "energy" in data
+    assert "the_tension" in data
+    assert "the_remedy" in data
     assert "pro_tip" in data

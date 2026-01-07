@@ -55,9 +55,9 @@ Output Format:
 You must return ONLY a valid JSON object. Do not include any conversational text, preamble, or markdown formatting (do not use ```json). The JSON must use the following keys:
 {{
   "headline": "3-5 words max. Punchy and relatable.",
-  "mood_word": "1 word that sums up the energy (e.g., 'Spicy', 'Foggy', 'Electric').",
+  "energy": "1 word that sums up the energy vibe",
   "the_tension": "2 sentences max. Describe the internal conflict the user feels today without explaining the planets.",
-  "the_shift": "1 sentence. The opportunity or 'silver lining' hidden in the stress.",
+  "the_remedy": "1 sentence. The opportunity or 'silver lining' hidden in the stress.",
   "pro_tip": "2 sentences max. Direct action steps. What should they DO?"
 }}
 
