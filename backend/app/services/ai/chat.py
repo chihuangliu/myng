@@ -40,23 +40,24 @@ def get_chat_completion(
     client: OpenAI = _client,
     tools: list = None,
     tool_choice: str = "auto",
+    stream: bool = False,
     **kwargs,
 ):
     """
     Sends a message to an AI and returns the full response object.
-    Supports tools/function calling.
+    Supports tools/function calling and streaming.
     """
     params = {
         "model": model_name,
         "messages": messages,
+        "stream": stream,
         **kwargs,
     }
     if tools:
         params["tools"] = tools
         params["tool_choice"] = tool_choice
 
-    response = client.chat.completions.create(**params)
-    return response.choices[0].message
+    return client.chat.completions.create(**params)
 
 
 if __name__ == "__main__":
