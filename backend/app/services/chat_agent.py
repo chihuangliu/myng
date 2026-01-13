@@ -20,7 +20,7 @@ def extract_transit_datetime(transit_dt_str: str) -> str:
             try:
                 dt = datetime.strptime(transit_dt_str, "%Y-%m-%d")
             except ValueError:
-                dt = None
+                dt = datetime.now(timezone.utc)
 
         if dt:
             if dt.tzinfo is None:
