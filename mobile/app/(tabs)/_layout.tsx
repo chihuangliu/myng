@@ -26,7 +26,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="daily-insight"
         options={{
-          title: 'Insight',
+          title: 'Daily Insight',
           headerShown: true,
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="star.fill" color={color} />,
         }}
