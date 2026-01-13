@@ -4,19 +4,13 @@ import json
 from pydantic import BaseModel, ValidationError
 from typing import Any
 from pprint import pprint
-from dataclasses import dataclass
-from datetime import date
+
 from backend.app.services.ai.chat import get_chat_response
 from backend.app.core.prokerala import get_client as prokerala_client
 from .prompts import portrait_prompt, daily_transit_prompt
 import logging
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class Sign:
-    name: str
 
 
 class PortraitSection(BaseModel):
@@ -93,35 +87,6 @@ class ZodiacEngine:
         self.prokerala_client = prokerala_client()
         self.portrait_prompt = portrait_prompt
         self.daily_transit_prompt = daily_transit_prompt
-
-    def get_sign(self, query_date: date) -> Sign:
-        month = query_date.month
-        day = query_date.day
-
-        if (month == 3 and day >= 21) or (month == 4 and day <= 19):
-            return Sign(name="Aries")
-        elif (month == 4 and day >= 20) or (month == 5 and day <= 20):
-            return Sign(name="Taurus")
-        elif (month == 5 and day >= 21) or (month == 6 and day <= 20):
-            return Sign(name="Gemini")
-        elif (month == 6 and day >= 21) or (month == 7 and day <= 22):
-            return Sign(name="Cancer")
-        elif (month == 7 and day >= 23) or (month == 8 and day <= 22):
-            return Sign(name="Leo")
-        elif (month == 8 and day >= 23) or (month == 9 and day <= 22):
-            return Sign(name="Virgo")
-        elif (month == 9 and day >= 23) or (month == 10 and day <= 22):
-            return Sign(name="Libra")
-        elif (month == 10 and day >= 23) or (month == 11 and day <= 21):
-            return Sign(name="Scorpio")
-        elif (month == 11 and day >= 22) or (month == 12 and day <= 21):
-            return Sign(name="Sagittarius")
-        elif (month == 12 and day >= 22) or (month == 1 and day <= 19):
-            return Sign(name="Capricorn")
-        elif (month == 1 and day >= 20) or (month == 2 and day <= 18):
-            return Sign(name="Aquarius")
-        else:
-            return Sign(name="Pisces")
 
     def get_portrait(self, datetime: str, coordinates: str) -> dict[str, Any]:
         """
