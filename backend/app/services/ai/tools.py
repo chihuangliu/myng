@@ -55,7 +55,7 @@ TRANSIT_TOOL_DEFINITION = {
             "properties": {
                 "transit_datetime": {
                     "type": "string",
-                    "description": "The current date/time in ISO format (e.g. 2025-01-04T12:00:00)",
+                    "description": "The transit datetime in ISO format (e.g. 2025-01-04T12:00:00)",
                 }
             },
             "required": ["transit_datetime"],

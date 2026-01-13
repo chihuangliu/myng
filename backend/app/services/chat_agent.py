@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import datetime, timezone
 from backend.app.services.ai.chat import get_chat_completion
 from backend.app.services.ai.tools import (
     TRANSIT_TOOL_DEFINITION,
@@ -9,6 +10,23 @@ from backend.app.services.ai.tools import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def extract_transit_datetime(transit_dt_str: str) -> str:
+    if transit_dt_str:
+        try:
+            dt = datetime.fromisoformat(transit_dt_str.replace("Z", "+00:00"))
+        except ValueError:
+            try:
+                dt = datetime.strptime(transit_dt_str, "%Y-%m-%d")
+            except ValueError:
+                dt = None
+
+        if dt:
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            transit_dt_str = dt.isoformat()
+    return transit_dt_str
 
 
 class ZodiacAgent:
@@ -30,10 +48,7 @@ class ZodiacAgent:
     def _get_system_prompt(self):
         return {
             "role": "system",
-            "content": f"""You are a mystic AI astrologer. 
-            You have access to the user's birth chart data implicitly. 
-            The user's birth date is {self.user_context.get("birth_datetime")}.
-            
+            "content": """You are a mystic AI astrologer.            
             Your goal is to answer questions using astrological insights.
             
             TOOLS:
@@ -55,10 +70,18 @@ class ZodiacAgent:
         logger.info(f"Agent executing tool: {name} with arguments: {args}")
 
         if name == "get_daily_transit_context":
+            transit_dt_str = args.get(
+                "transit_datetime", self.user_context.get("transit_datetime")
+            )
+
+            transit_dt_str = extract_transit_datetime(transit_dt_str)
+
+            logger.info(f"Transit datetime: {transit_dt_str}")
+
             result = get_daily_transit_context(
                 birth_datetime=self.user_context["birth_datetime"],
                 birth_coordinates=self.user_context["birth_coordinates"],
-                transit_datetime=args.get("transit_datetime", self.user_context.get("transit_datetime")),
+                transit_datetime=transit_dt_str,
                 current_coordinates=self.user_context["current_coordinates"],
             )
             logger.debug(f"Tool execution result: {result[:200]}...")
@@ -75,64 +98,50 @@ class ZodiacAgent:
         logger.warning(f"Attempted to execute unknown tool: {name}")
         return json.dumps({"error": "Unknown tool"})
 
-    def chat(self, conversation_history: list[dict]):
-        """
-        Standard non-streaming chat.
-        """
-        logger.info("Agent starting new chat turn")
+    def _prepare_chat(self, conversation_history: list[dict]):
         messages = [self._get_system_prompt()] + conversation_history
         tools = [TRANSIT_TOOL_DEFINITION, NATAL_CHART_TOOL_DEFINITION]
 
-        response_msg = get_chat_completion(
+        response = get_chat_completion(
             messages=messages, tools=tools, tool_choice="auto"
         )
+        response_msg = response.choices[0].message
 
         if response_msg.tool_calls:
-            logger.info(f"AI requested tool calls: {[tc.function.name for tc in response_msg.tool_calls]}")
+            logger.info(
+                f"AI requested tool calls: {[tc.function.name for tc in response_msg.tool_calls]}"
+            )
             messages.append(response_msg)
 
             for tool_call in response_msg.tool_calls:
                 tool_result = self._execute_tool(tool_call)
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": tool_result,
-                })
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_result,
+                    }
+                )
+            return messages, tools, True
+        return response_msg.content, tools, False
 
-            final_response = get_chat_completion(messages=messages, tools=tools)
-            return final_response.content
-
-        return response_msg.content
+    def chat(self, conversation_history: list[dict]):
+        """Standard non-streaming chat."""
+        logger.info("Agent starting new chat turn")
+        result, tools, needs_final_call = self._prepare_chat(conversation_history)
+        if needs_final_call:
+            final_response = get_chat_completion(messages=result, tools=tools)
+            return final_response.choices[0].message.content
+        return result
 
     def chat_stream(self, conversation_history: list[dict]):
-        """
-        Yields tokens for the chat response.
-        """
+        """Yields tokens for the chat response."""
         logger.info("Agent starting new streaming chat turn")
-        messages = [self._get_system_prompt()] + conversation_history
-        tools = [TRANSIT_TOOL_DEFINITION, NATAL_CHART_TOOL_DEFINITION]
-
-        # Initial call to see if tools are needed
-        response_msg = get_chat_completion(
-            messages=messages, tools=tools, tool_choice="auto", stream=False
-        )
-
-        if response_msg.tool_calls:
-            logger.info(f"AI requested tool calls: {[tc.function.name for tc in response_msg.tool_calls]}")
-            messages.append(response_msg)
-
-            for tool_call in response_msg.tool_calls:
-                tool_result = self._execute_tool(tool_call)
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": tool_result,
-                })
-
-            # Final call with streaming
-            stream = get_chat_completion(messages=messages, tools=tools, stream=True)
+        result, tools, needs_final_call = self._prepare_chat(conversation_history)
+        if needs_final_call:
+            stream = get_chat_completion(messages=result, tools=tools, stream=True)
             for chunk in stream:
                 if chunk.choices and chunk.choices[0].delta.content:
                     yield chunk.choices[0].delta.content
         else:
-            yield response_msg.content or ""
+            yield result or ""
