@@ -79,33 +79,67 @@ export default function LandingScreen() {
             if (selectedCity) {
                 await AsyncStorage.setItem('user_city', selectedCity);
                 
-                // Resolve coordinates
+                // Format as naive string "YYYY-MM-DDTHH:mm:ss"
+                const year = birthDate.getFullYear();
+                const month = String(birthDate.getMonth() + 1).padStart(2, '0');
+                const day = String(birthDate.getDate()).padStart(2, '0');
+                const hours = String(birthDate.getHours()).padStart(2, '0');
+                const minutes = String(birthDate.getMinutes()).padStart(2, '0');
+                const naiveDateStr = `${year}-${month}-${day}T${hours}:${minutes}:00`;
+
                 try {
-                    const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/v1/location/resolve?city=${encodeURIComponent(selectedCity)}`);
+                    const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/v1/location/localize`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            date_str: naiveDateStr,
+                            city: selectedCity
+                        })
+                    });
+
                     if (response.ok) {
                         const data = await response.json();
+                        // Save the correctly localized datetime (ISO with offset)
+                        await AsyncStorage.setItem('user_birth_date', data.datetime); // Use 'user_birth_date' or 'user_birth_datetime'?
+                        // Earlier code used 'user_birth_date' here but 'user_birth_datetime' in Chat/Portrait.
+                        // Wait, check LandingScreen loadUserData: retrieves 'user_birth_date'.
+                        // But Portrait uses 'user_birth_datetime' (from params).
+                        // Let's stick to 'user_birth_date' for storage here, and update navigation params.
+                        
                         if (data.coordinates) {
                             await AsyncStorage.setItem('user_coordinates', data.coordinates);
                         }
+                        
+                        // Navigate with the CORRECTED datetime
+                        router.replace({
+                            pathname: '/(tabs)',
+                            params: {
+                                city: selectedCity,
+                                datetime: data.datetime
+                            }
+                        });
+                        return; // Exit early
                     } else {
-                        console.warn('Failed to resolve coordinates');
+                        console.warn('Failed to localize datetime');
                     }
                 } catch (err) {
-                    console.error('Error resolving location:', err);
+                    console.error('Error localizing:', err);
                 }
             }
+            
+            // Fallback if localization fails (use default ISO - potentially wrong timezone)
             await AsyncStorage.setItem('user_birth_date', birthDate.toISOString());
+            router.replace({
+                pathname: '/(tabs)',
+                params: {
+                    city: selectedCity,
+                    datetime: birthDate.toISOString()
+                }
+            });
+
         } catch (e) {
             console.error('Failed to save user data', e);
         }
-
-        router.replace({
-            pathname: '/(tabs)',
-            params: {
-                city: selectedCity,
-                datetime: birthDate.toISOString()
-            }
-        });
     };
 
     const formatDate = (date: Date) => {
