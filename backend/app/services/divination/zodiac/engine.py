@@ -331,6 +331,13 @@ class ZodiacEngine:
         )
 
 
+_zodiac_engine = ZodiacEngine()
+
+
+def get_zodiac_engine() -> ZodiacEngine:
+    return _zodiac_engine
+
+
 if __name__ == "__main__":
     engine = ZodiacEngine()
     # response = engine.get_ai_portrait(

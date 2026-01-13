@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from backend.app.services.divination.zodiac.engine import ZodiacEngine
+from backend.app.services.divination.zodiac.engine import get_zodiac_engine
 from backend.app.schemas.zodiac import (
     ZodiacPortraitRequest,
     ZodiacPortraitResponse,
@@ -10,7 +10,7 @@ from backend.app.schemas.zodiac import (
 from backend.app.core.location import get_coordinates
 
 router = APIRouter()
-engine = ZodiacEngine()
+engine = get_zodiac_engine()
 
 
 @router.post("/divination/zodiac/portrait")

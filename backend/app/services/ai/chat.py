@@ -25,13 +25,38 @@ def get_chat_response(
     **kwargs,
 ) -> str:
     """
-    Sends a message to an OPENAI Compatible API via the OpenAI client and returns the response.
+    Sends a message to an OPENAI Compatible API via the OpenAI client and returns the response content.
     """
 
     response = client.chat.completions.create(
         model=model_name, messages=messages, **kwargs
     )
     return response.choices[0].message.content
+
+
+def get_chat_completion(
+    messages: list[ChatCompletionMessageParam],
+    model_name: str = os.getenv("AI_MODEL_NAME"),
+    client: OpenAI = _client,
+    tools: list = None,
+    tool_choice: str = "auto",
+    **kwargs,
+):
+    """
+    Sends a message to an AI and returns the full response object.
+    Supports tools/function calling.
+    """
+    params = {
+        "model": model_name,
+        "messages": messages,
+        **kwargs,
+    }
+    if tools:
+        params["tools"] = tools
+        params["tool_choice"] = tool_choice
+
+    response = client.chat.completions.create(**params)
+    return response.choices[0].message
 
 
 if __name__ == "__main__":
