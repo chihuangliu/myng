@@ -26,6 +26,24 @@ def get_daily_transit_context(
         return json.dumps({"error": str(e)})
 
 
+def get_natal_chart_context(
+    birth_datetime: str,
+    birth_coordinates: str,
+):
+    """
+    Retrieves the user's natal chart (planet positions, houses, aspects).
+    Use this when the user asks about their personal astrology (e.g., 'What is my moon sign?', 'Do I have any squares?').
+    """
+    try:
+        data = engine.get_portrait(
+            datetime=birth_datetime,
+            coordinates=birth_coordinates,
+        )
+        return json.dumps(data)
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+
 # Tool Definition for the AI
 TRANSIT_TOOL_DEFINITION = {
     "type": "function",
@@ -41,6 +59,19 @@ TRANSIT_TOOL_DEFINITION = {
                 }
             },
             "required": ["transit_datetime"],
+        },
+    },
+}
+
+NATAL_CHART_TOOL_DEFINITION = {
+    "type": "function",
+    "function": {
+        "name": "get_natal_chart_context",
+        "description": "Get the user's natal chart details (planet positions, signs, houses, aspects). Use this to answer questions about their personal birth chart.",
+        "parameters": {
+            "type": "object",
+            "properties": {},  # No parameters needed from AI, we inject birth data
+            "required": [],
         },
     },
 }

@@ -3,7 +3,9 @@ import logging
 from backend.app.services.ai.chat import get_chat_completion
 from backend.app.services.ai.tools import (
     TRANSIT_TOOL_DEFINITION,
+    NATAL_CHART_TOOL_DEFINITION,
     get_daily_transit_context,
+    get_natal_chart_context,
 )
 
 logger = logging.getLogger(__name__)
@@ -34,10 +36,20 @@ class ZodiacAgent:
             result = get_daily_transit_context(
                 birth_datetime=self.user_context["birth_datetime"],
                 birth_coordinates=self.user_context["birth_coordinates"],
-                transit_datetime=self.user_context["transit_datetime"],
-                current_coordinates=self.user_context["current_coordinates"],
+                transit_datetime=args["transit_datetime"],
+                current_coordinates=self.user_context.get(
+                    "current_coordinates", self.user_context["birth_coordinates"]
+                ),
             )
-            logger.debug(f"Tool execution result: {result}")
+            logger.debug(f"Tool execution result: {result[:200]}...")
+            return result
+
+        elif name == "get_natal_chart_context":
+            result = get_natal_chart_context(
+                birth_datetime=self.user_context["birth_datetime"],
+                birth_coordinates=self.user_context["birth_coordinates"],
+            )
+            logger.debug(f"Tool execution result: {result[:200]}...")
             return result
 
         logger.warning(f"Attempted to execute unknown tool: {name}")
@@ -56,12 +68,16 @@ class ZodiacAgent:
             The user's birth date is {self.user_context.get("birth_datetime")}.
             
             Your goal is to answer questions using astrological insights.
-            If the user asks about their day, current vibe, or future influence, USE the 'get_daily_transit_context' tool.
-            Do not guess. Use the tool to get the real planetary aspects.
             
-            When interpreting the tool output (aspects like 'Transit Sun Square Natal Moon'):
+            TOOLS:
+            1. 'get_daily_transit_context': Use this if the user asks about their day, current vibe, or future planetary influence.
+            2. 'get_natal_chart_context': Use this if the user's question need their natal chart data (e.g., 'What is my rising sign?', 'Do I have a Scorpio Moon?', 'Explain my 7th house').
+            
+            Do not guess. Use the appropriate tool to get the real data.
+            
+            When interpreting tool output:
             - Be empathetic but honest.
-            - Explain what it means simply (e.g., 'You might feel a conflict between your ego and emotions today').
+            - Explain technical terms simply.
             - Keep it conversational.
             """,
         }
@@ -69,8 +85,10 @@ class ZodiacAgent:
         messages = [system_prompt] + conversation_history
         logger.debug(f"Sending messages to AI: {json.dumps(messages, indent=2)}")
 
+        tools = [TRANSIT_TOOL_DEFINITION, NATAL_CHART_TOOL_DEFINITION]
+
         response_msg = get_chat_completion(
-            messages=messages, tools=[TRANSIT_TOOL_DEFINITION], tool_choice="auto"
+            messages=messages, tools=tools, tool_choice="auto"
         )
 
         if response_msg.tool_calls:
@@ -89,12 +107,9 @@ class ZodiacAgent:
                         "content": tool_result,
                     }
                 )
-                logger.debug(f"Tool call result: {tool_result}")
 
             logger.debug("Requesting final response with tool results in context")
-            final_response = get_chat_completion(
-                messages=messages, tools=[TRANSIT_TOOL_DEFINITION]
-            )
+            final_response = get_chat_completion(messages=messages, tools=tools)
             logger.info("Final agent response generated")
             logger.debug(f"Response content: {final_response.content}")
             return final_response.content
