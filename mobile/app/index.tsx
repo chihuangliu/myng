@@ -78,14 +78,29 @@ export default function LandingScreen() {
         try {
             if (selectedCity) {
                 await AsyncStorage.setItem('user_city', selectedCity);
+                
+                // Resolve coordinates
+                try {
+                    const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/v1/location/resolve?city=${encodeURIComponent(selectedCity)}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.coordinates) {
+                            await AsyncStorage.setItem('user_coordinates', data.coordinates);
+                        }
+                    } else {
+                        console.warn('Failed to resolve coordinates');
+                    }
+                } catch (err) {
+                    console.error('Error resolving location:', err);
+                }
             }
             await AsyncStorage.setItem('user_birth_date', birthDate.toISOString());
         } catch (e) {
             console.error('Failed to save user data', e);
         }
 
-        router.push({
-            pathname: '/portrait',
+        router.replace({
+            pathname: '/(tabs)',
             params: {
                 city: selectedCity,
                 datetime: birthDate.toISOString()
