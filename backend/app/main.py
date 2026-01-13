@@ -4,10 +4,11 @@ from backend.app.api.v1.router import api_router
 from backend.app.core.logger import setup_logging
 import logging
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
-setup_logging()
+setup_logging(os.getenv("LOG_LEVEL", "INFO"))
 logger = logging.getLogger(__name__)
 logger.info("Application starting up")
 
