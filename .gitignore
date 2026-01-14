@@ -5,3 +5,4 @@ mobile/.expo
 mobile/.vscode
 mobile/expo-env.d.ts
 mobile/node_modules/
+backend/token.json
